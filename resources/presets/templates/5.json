@@ -1,0 +1,102 @@
+{
+  "dnsServers": [
+    {
+      "id": "Google",
+      "name": "Google",
+      "type": "tls",
+      "server": "8.8.8.8",
+      "detour": "selector_out",
+      "enabled": true,
+      "order": 0
+    },
+    {
+      "id": "local",
+      "name": "local",
+      "type": "local",
+      "enabled": true,
+      "order": 1
+    }
+  ],
+  "dnsPolicies": [
+    {
+      "type": "default",
+      "name": "🎯 国内域名直连",
+      "server": "local",
+      "enabled": true,
+      "order": 0,
+      "ruleSet": [
+        "acl:ChinaDomain",
+        "acl:UnBan",
+        "acl:SteamCN",
+        "acl:ChinaMedia",
+        "acl:Download"
+      ]
+    }
+  ],
+  "policies": [
+    {
+      "type": "default",
+      "name": "🏠 私有网络",
+      "outbound": "direct_out",
+      "enabled": true,
+      "order": 0,
+      "ruleSet": [
+        "geoip:private"
+      ]
+    },
+    {
+      "type": "default",
+      "name": "🍎 苹果服务",
+      "outbound": "direct_out",
+      "enabled": true,
+      "order": 1,
+      "ruleSet": [
+        "acl:Apple"
+      ]
+    },
+    {
+      "type": "default",
+      "name": "🎯 国内域名直连",
+      "outbound": "direct_out",
+      "enabled": true,
+      "order": 2,
+      "ruleSet": [
+        "acl:ChinaDomain",
+        "acl:UnBan",
+        "acl:SteamCN",
+        "acl:ChinaMedia",
+        "acl:Download"
+      ]
+    },
+    {
+      "type": "raw",
+      "name": "🔍 未匹配域名DNS解析",
+      "enabled": true,
+      "order": 3,
+      "outbound": "",
+      "raw_data": {
+        "action": "resolve"
+      }
+    },
+    {
+      "type": "default",
+      "name": "🎯国内IP直连",
+      "outbound": "direct_out",
+      "enabled": true,
+      "order": 4,
+      "ruleSet": [
+        "acl:ChinaIp",
+        "acl:ChinaCompanyIp",
+        "geoip:cn"
+      ]
+    }
+  ],
+  "settings": {
+    "policy-final-outbound": "selector_out",
+    "dns-unmatched-server": "Google",
+    "dns-resolve-server": "Google",
+    "dns-proxy-server": "local",
+    "dns-server-enabled": "false",
+    "dashboard-tun-mode": "false"
+  }
+}

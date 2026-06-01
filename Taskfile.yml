@@ -1,0 +1,106 @@
+version: '3'
+
+vars:
+  APP_NAME: "sandfox"
+  BIN_DIR: "bin"
+  PACKAGE_MANAGER: '{{.PACKAGE_MANAGER | default "npm"}}'
+  VITE_PORT: '{{.WAILS_VITE_PORT | default 9245}}'
+
+includes:
+  common: ./build/Taskfile.yml
+  windows: ./build/windows/Taskfile.yml
+  darwin: ./build/darwin/Taskfile.yml
+  linux: ./build/linux/Taskfile.yml
+  ios: ./build/ios/Taskfile.yml
+  android: ./build/android/Taskfile.yml
+
+tasks:
+  build:
+    summary: Builds the application
+    cmds:
+      - task: "{{OS}}:build"
+
+  package:
+    summary: Packages a production build of the application
+    cmds:
+      - task: "{{OS}}:package"
+
+  run:
+    summary: Runs the application
+    cmds:
+      - task: "{{OS}}:run"
+
+  dev:
+    summary: Runs the application in development mode
+    cmds:
+      - wails3 dev -config ./build/config.yml -port {{.VITE_PORT}}
+
+  setup:docker:
+    summary: Builds Docker image for cross-compilation (~800MB download)
+    cmds:
+      - task: common:setup:docker
+
+  build:server:
+    summary: Builds the application in server mode (no GUI, HTTP server only)
+    cmds:
+      - task: common:build:server
+
+  run:server:
+    summary: Runs the application in server mode
+    cmds:
+      - task: common:run:server
+
+  build:docker:
+    summary: Builds a Docker image for server mode deployment
+    cmds:
+      - task: common:build:docker
+
+  run:docker:
+    summary: Builds and runs the Docker image
+    cmds:
+      - task: common:run:docker
+
+  parity:rover:
+    summary: Checks API, node type, and Clash rule parity against a local Rover checkout
+    cmds:
+      - node scripts/rover-parity-check.mjs
+
+  verify:
+    summary: Runs the core Sandfox verification suite
+    cmds:
+      - task: parity:rover
+      - go test ./...
+
+  audit:rover:
+    summary: Audits Rover parity plus environment-bound completion gates
+    cmds:
+      - node scripts/rover-completion-audit.mjs
+
+  audit:rover:commands:
+    summary: Prints target-host commands for collecting Rover completion evidence
+    cmds:
+      - node scripts/rover-target-evidence-commands.mjs
+
+  audit:rover:evidence-bundle:
+    summary: Writes target-host evidence commands and packages the current evidence directory
+    cmds:
+      - |
+        evidence_dir="${SANDFOX_AUDIT_EVIDENCE_DIR:-/tmp/sandfox-rover-evidence}"
+        mkdir -p "$evidence_dir"
+        SANDFOX_AUDIT_EVIDENCE_DIR="$evidence_dir" node scripts/rover-target-evidence-commands.mjs > "$evidence_dir/target-evidence-commands.md"
+        SANDFOX_VALIDATE_SERVICE_MUTATION=0 SANDFOX_VALIDATE_EVIDENCE_OUT="$evidence_dir/current-helper-safe.json" node scripts/roverservice-target-check.mjs
+        SANDFOX_AUDIT_EVIDENCE_DIR="$evidence_dir" node scripts/rover-pending-evidence.mjs
+      - |
+        evidence_dir="${SANDFOX_AUDIT_EVIDENCE_DIR:-/tmp/sandfox-rover-evidence}"
+        tarball="${SANDFOX_AUDIT_EVIDENCE_TARBALL:-/tmp/sandfox-rover-evidence.tar.gz}"
+        tar -C "$(dirname "$evidence_dir")" -czf "$tarball" "$(basename "$evidence_dir")"
+
+  validate:roverservice:
+    summary: Checks RoverService helper on the current target host
+    cmds:
+      - node scripts/roverservice-target-check.mjs
+
+  validate:linux-package:
+    summary: Checks Linux package artifacts on a Linux/Docker target host
+    cmds:
+      - node scripts/linux-package-target-check.mjs

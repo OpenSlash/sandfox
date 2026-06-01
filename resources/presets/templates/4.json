@@ -1,0 +1,36 @@
+{
+  "dnsServers": [
+    {
+      "id": "local",
+      "name": "local",
+      "type": "local",
+      "enabled": true,
+      "order": 0
+    }
+  ],
+  "dnsPolicies": [],
+  "policies": [
+    {
+      "type": "default",
+      "name": "🌏 国外代理",
+      "outbound": "selector_out",
+      "enabled": true,
+      "order": 0,
+      "ruleSet": [
+        "geosite:geolocation-!cn",
+        "geosite:google",
+        "geoip:google",
+        "acl:ProxyGFWlist",
+        "acl:ProxyMedia"
+      ]
+    }
+  ],
+  "settings": {
+    "policy-final-outbound": "direct_out",
+    "dns-unmatched-server": "local",
+    "dns-resolve-server": "local",
+    "dns-proxy-server": "local",
+    "dns-server-enabled": "false",
+    "dashboard-tun-mode": "false"
+  }
+}

@@ -1,0 +1,160 @@
+{
+  "dnsServers": [
+    {
+      "type": "rover",
+      "name": "聚合DNS",
+      "upstreams": "https://cloudflare-dns.com/dns-query, https://dns.google/dns-query",
+      "use_proxy": true,
+      "bootstrap_addrs": "tls://223.5.5.5, tls://120.53.53.53",
+      "fallback_addrs": "https://doh.pub/dns-query, https://dns.alidns.com/dns-query",
+      "id": "Rover",
+      "enabled": true
+    },
+   {
+      "id": "local",
+      "name": "local",
+      "type": "local",
+      "enabled": true
+    },
+    {
+      "id": "fakeip",
+      "name": "fakeip",
+      "type": "raw",
+      "enabled": true,
+      "raw_data": {
+        "tag": "fakeip",
+        "type": "fakeip",
+        "inet4_range": "198.18.0.0/15",
+        "inet6_range": "fc00::/18"
+      }
+    }
+  ],
+  "dnsPolicies": [
+    {
+      "type": "default",
+      "name": "🎯 国内域名解析",
+      "server": "local",
+      "enabled": true,
+      "order": 0,
+      "ruleSet": [
+        "acl:ChinaDomain"
+      ]
+    },
+    {
+      "type": "raw",
+      "name": "🎭 FakeIP",
+      "server": "fakeip",
+      "enabled": true,
+      "raw_data": {
+        "server": "fakeip",
+        "query_type": [
+          "A",
+          "AAAA"
+        ]
+      }
+    }
+  ],
+  "policies": [
+    {
+      "type": "default",
+      "name": "Bootstrap DNS直连",
+      "outbound": "direct_out",
+      "logical_rule": {
+        "type": "logical",
+        "mode": "or",
+        "rules": [
+          {
+            "ip_cidr": [
+              "223.5.5.5"
+            ]
+          },
+          {
+            "ip_cidr": [
+              "120.53.53.53"
+            ]
+          }
+        ]
+      },
+      "enabled": true
+    },
+    {
+      "type": "raw",
+      "name": "🏠 私有网络",
+      "enabled": true,
+      "order": 0,
+      "outbound": "",
+      "raw_data": {
+        "ip_is_private": true,
+        "outbound": "direct_out"
+      }
+    },
+    {
+      "type": "default",
+      "name": "🍎 苹果服务",
+      "outbound": "direct_out",
+      "enabled": true,
+      "order": 1,
+      "ruleSet": [
+        "acl:Apple"
+      ]
+    },
+    {
+      "type": "default",
+      "name": "🎯 国内域名直连",
+      "outbound": "direct_out",
+      "enabled": true,
+      "order": 2,
+      "ruleSet": [
+        "acl:ChinaDomain",
+        "acl:UnBan",
+        "acl:SteamCN",
+        "acl:ChinaMedia",
+        "acl:Download"
+      ]
+    },
+    {
+      "type": "default",
+      "name": "🌏 国外穿墙",
+      "outbound": "selector_out",
+      "enabled": true,
+      "order": 3,
+      "ruleSet": [
+        "geosite:geolocation-!cn",
+        "geosite:google",
+        "geoip:google",
+        "acl:ProxyGFWlist",
+        "acl:ProxyMedia"
+      ]
+    },
+    {
+      "type": "raw",
+      "name": "🔍 未匹配域名DNS解析",
+      "enabled": true,
+      "order": 4,
+      "outbound": "",
+      "raw_data": {
+        "action": "resolve"
+      }
+    },
+    {
+      "type": "default",
+      "name": "🎯国内IP直连",
+      "outbound": "direct_out",
+      "enabled": true,
+      "order": 5,
+      "ruleSet": [
+        "acl:ChinaIp",
+        "acl:ChinaCompanyIp",
+        "geoip:cn"
+      ]
+    }
+  ],
+  "settings": {
+    "policy-final-outbound": "selector_out",
+    "dns-unmatched-server": "Rover",
+    "dns-resolve-server": "local",
+    "dns-proxy-server": "local",
+    "dns-server-enabled": "true",
+    "dashboard-tun-mode": "true"
+  }
+}
