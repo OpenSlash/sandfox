@@ -1,0 +1,64 @@
+name: Bug report
+description: Report a problem with Sandfox
+labels: ["bug", "triage"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Remove subscriptions, tokens, passwords, and private server or network details before submitting.
+  - type: dropdown
+    id: platform
+    attributes:
+      label: Platform
+      options:
+        - macOS
+        - Windows
+        - Linux
+    validations:
+      required: true
+  - type: input
+    id: architecture
+    attributes:
+      label: Architecture
+      placeholder: arm64, amd64, etc.
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: Sandfox version or commit
+    validations:
+      required: true
+  - type: input
+    id: singbox
+    attributes:
+      label: sing-box version
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      placeholder: |
+        1. Open ...
+        2. Import ...
+        3. Start ...
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behavior
+    validations:
+      required: true
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual behavior
+    validations:
+      required: true
+  - type: textarea
+    id: logs
+    attributes:
+      label: Relevant logs
+      render: shell

@@ -6,10 +6,10 @@
 		"0000": {
 			"ProductVersion": "0.1.0",
 			"CompanyName": "Sandfox",
-			"FileDescription": "Wails sing-box desktop client",
-			"LegalCopyright": "© 2026, My Company",
+			"FileDescription": "A local-first desktop client for managing sing-box",
+			"LegalCopyright": "© 2026, HoltAI and Sandfox contributors",
 			"ProductName": "Sandfox",
-			"Comments": "This is a comment"
+			"Comments": "Manage sing-box profiles, policies, DNS, rules, logs, and services."
 		}
 	}
 }

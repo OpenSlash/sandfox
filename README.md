@@ -1,16 +1,64 @@
 # Sandfox
 
-Sandfox is a Wails v3 + Go desktop client that tracks Rover capabilities with a React UI, shadcn-style local components, and lucide icons. It manages profiles, proxy nodes, policies, DNS, rule sets, runtime logs, sing-box config generation, and a RoverService-compatible privileged helper.
+Sandfox is a local-first desktop client for managing [sing-box](https://sing-box.sagernet.org) on macOS, Windows, and Linux. It gives users a graphical way to manage proxy profiles, routing policies, DNS, rule sets, runtime logs, diagnostics, and a compatible privileged service helper.
+
+Sandfox is written in Go and Wails v3, with a React frontend. It is early software and preparing for its first public tagged release.
+
+## Why Sandfox
+
+sing-box is powerful, but users often have to edit JSON by hand, convert rules from other formats, understand route precedence, and manage privileged startup separately on each operating system. Sandfox focuses on that maintenance work:
+
+- import and edit `sing-box`, Clash, or subscription-style profiles locally;
+- manage proxy groups, custom groups, providers, routing policies, DNS policies, DNS servers, and rule sets;
+- generate and preview `sing-box` configuration before starting the core;
+- inspect runtime status, traffic, proxy groups, logs, and connection state;
+- configure autostart, system proxy, and platform-specific privileged service workflows;
+- keep a local-first data model with export, import, and configuration backup support.
+
+Sandfox intentionally does not provide or bundle subscriptions or proxy servers.
+
+## Status
+
+- Target platforms: macOS 12+, Windows 10+ with WebView2, and current Linux distributions with GTK4 and WebKitGTK 6.
+- Architectures: arm64 and amd64 are the primary release targets.
+- Core dependency: a user-installed `sing-box` binary. Sandfox can detect it on `PATH` or use the path configured in Core settings.
+- Verification state: the automated Rover parity audit currently covers 25 of 29 completion gates. The remaining gates require real target-host evidence for privileged service lifecycles and full Linux packaging.
+- Release state: pre-release. Until the first tag is published, run from source or use artifacts built locally from a specific commit.
+
+See [ROADMAP.md](ROADMAP.md) for priorities and [docs/rover-parity-audit.md](docs/rover-parity-audit.md) for the current evidence boundary.
+
+## Features
+
+### Profiles and subscriptions
+
+- Import remote subscriptions, Clash, or `sing-box` profiles.
+- Update profiles on a configurable interval and filter imported nodes.
+- Manage nodes, proxy groups, custom groups, providers, health checks, latency tests, and policy overrides.
+- Preserve subscription metadata and provider state without storing credentials in the repository.
+
+### Routing and DNS
+
+- Edit policies for domains, suffixes, keywords, CIDRs, ports, process names, protocols, query types, and other supported matchers.
+- Import policy templates and preset rule sets.
+- Configure DNS servers, DNS policies, detours, strategy, FakeIP, fallback filters, and hosts.
+- Preview generated configuration and export a snapshot for review or troubleshooting.
+
+### Runtime and diagnostics
+
+- Start or stop the local `sing-box` process through the app or the compatible privileged helper.
+- View API, mixed proxy, TUN, DNS, core, helper, and system-integration status.
+- Read application and `sing-box` logs, clear logs, inspect connections, test proxy delay, and probe the Clash-compatible API.
+- Run `sandfox --diagnose-core` to generate, validate, start, probe, and stop the configured core.
 
 ## Requirements
 
-- Go with Wails v3 installed as `wails3`
+- Go 1.25 or newer
 - Node.js and npm
-- sing-box available on `PATH` or configured in Settings
-- Optional: Docker Desktop for Linux cross-packaging on macOS/Windows
-- Optional: NSIS for Windows installer packaging
+- [Wails v3 CLI](https://v3.wails.io) installed as `wails3`
+- `sing-box` on `PATH`, or configured in Core settings
+- Platform packages and signing/notarization tools when building distributable packages
 
-If Wails is installed into the default Go bin directory, add it to your shell before running project tasks:
+If Wails is installed in the default Go bin directory:
 
 ```sh
 export PATH="$HOME/go/bin:$PATH"
@@ -28,41 +76,30 @@ Build the current platform:
 wails3 build
 ```
 
-Package the current platform:
-
-```sh
-wails3 task package
-```
-
-## Verification
-
 Run the core verification suite:
 
 ```sh
 wails3 task verify
 ```
 
-This runs:
+`verify` runs:
 
 - `wails3 task parity:rover`
 - `go test ./...`
 
-The Rover parity check reads a local Rover checkout from `/tmp/rover-source` by default. Override it with:
+The parity check reads a local Rover checkout from `/tmp/rover-source` by default. Override it with:
 
 ```sh
 ROVER_SOURCE=/path/to/rover node scripts/rover-parity-check.mjs
 ```
 
-The parity check verifies:
+Frontend type checking and production build are also useful for UI changes:
 
-- Rover preload API coverage in Wails bindings
-- Rover Clash node type coverage
-- Rover Clash route rule type coverage
-- RoverService helper HTTP endpoint coverage
-- Rover sing-box preset rule set count
-- Rover preset template paths
-
-The completion audit also verifies the Go + Wails v3 baseline, main frontend platform areas, shadcn-style lucide icons, profile/subscription behavior, config generation behavior, platform integration controls, and target-host evidence gates.
+```sh
+cd frontend
+npm install
+npm run build
+```
 
 Run the stricter completion audit:
 
@@ -70,80 +107,7 @@ Run the stricter completion audit:
 wails3 task audit:rover
 ```
 
-This command is expected to fail until the environment-bound gates are verified on real macOS, Windows, and Linux hosts. It separates automated parity evidence and local package artifacts from service-install and Linux-packaging evidence.
-
-Print the target-host evidence commands:
-
-```sh
-export PATH="$HOME/go/bin:$PATH"
-wails3 task audit:rover:commands
-```
-
-Write the command file, refresh the current safe helper evidence, write the pending target evidence manifest, and update `/tmp/sandfox-rover-evidence.tar.gz`:
-
-```sh
-export PATH="$HOME/go/bin:$PATH"
-wails3 task audit:rover:evidence-bundle
-```
-
-Check the RoverService helper on a target host:
-
-```sh
-export PATH="$HOME/go/bin:$PATH"
-wails3 task validate:roverservice
-```
-
-By default this only finds the helper and runs safe `help`/`status` checks. To verify the full privileged lifecycle on a disposable target host, run it with:
-
-```sh
-export PATH="$HOME/go/bin:$PATH"
-SANDFOX_VALIDATE_SERVICE_MUTATION=1 \
-SANDFOX_VALIDATE_EVIDENCE_OUT=/path/to/evidence/macos-service.json \
-wails3 task validate:roverservice
-```
-
-To feed target-host evidence back into the completion audit, save the JSON output as:
-
-- `macos-service.json`
-- `windows-service.json`
-- `linux-service.json`
-- `linux-package.json`
-
-The bundle's `current-helper-safe.json` is non-mutating current-host evidence. Its service lifecycle check is marked `skipped: true` and does not replace the target-host service JSON files above.
-
-Then run:
-
-```sh
-export PATH="$HOME/go/bin:$PATH"
-SANDFOX_AUDIT_EVIDENCE_DIR=/path/to/evidence wails3 task audit:rover
-```
-
-For Linux package evidence, run on a Linux or working Docker target:
-
-```sh
-export PATH="$HOME/go/bin:$PATH"
-SANDFOX_VALIDATE_LINUX_PACKAGE_MUTATION=1 \
-SANDFOX_VALIDATE_EVIDENCE_OUT=/path/to/evidence/linux-package.json \
-wails3 task validate:linux-package
-```
-
-On a non-Linux host with a working `wails-cross` Docker image, run the full Linux package chain inside Docker:
-
-```sh
-export PATH="$HOME/go/bin:$PATH"
-SANDFOX_VALIDATE_LINUX_PACKAGE_MUTATION=1 \
-SANDFOX_LINUX_PACKAGE_DOCKER=1 \
-SANDFOX_VALIDATE_EVIDENCE_OUT=/path/to/evidence/linux-package.json \
-wails3 task validate:linux-package
-```
-
-If GitHub downloads for AppImage tooling are unreliable, pre-place `linuxdeploy-<arch>.AppImage` and `AppRun-<arch>` in `build/linux/appimage/cache/`; `scripts/linux-package-docker-target.sh` reuses those files when present.
-
-Detailed target-host steps live in:
-
-```sh
-docs/target-validation-runbook.md
-```
+This command is expected to fail until environment-bound gates are verified on real macOS, Windows, and Linux hosts. It separates automated parity evidence from local package artifacts and target-host service evidence.
 
 ## Packaging
 
@@ -153,6 +117,8 @@ macOS:
 wails3 task package
 ```
 
+This creates `bin/sandfox.app` with ad-hoc signing.
+
 Windows:
 
 ```sh
@@ -160,7 +126,7 @@ wails3 task windows:package
 ARCH=amd64 wails3 task windows:package
 ```
 
-The Windows task writes `bin/sandfox.exe` and `bin/roverservice.exe` for the requested architecture, then emits an architecture-specific installer such as `bin/sandfox-arm64-installer.exe` or `bin/sandfox-amd64-installer.exe`.
+The task writes `bin/sandfox.exe` and `bin/roverservice.exe`, then emits an installer such as `bin/sandfox-arm64-installer.exe` or `bin/sandfox-amd64-installer.exe`.
 
 Linux:
 
@@ -168,43 +134,42 @@ Linux:
 wails3 task linux:package
 ```
 
-Linux cross-packaging uses Docker. The Docker preflight is bounded by `scripts/docker-ready.mjs` so an unhealthy Docker daemon fails quickly instead of hanging. Adjust the timeout if needed:
+This creates AppImage, DEB, RPM, and Arch packages. Linux cross-packaging uses Docker and the `wails-cross` image.
 
-```sh
-DOCKER_READY_TIMEOUT_MS=30000 node scripts/docker-ready.mjs
-```
+Platform signing and target-host validation are release-maintainer tasks. See [MAINTAINERS.md](MAINTAINERS.md) and [docs/target-validation-runbook.md](docs/target-validation-runbook.md).
 
-## Rover parity status
+## Project layout
 
-The current audit lives in:
+- `main.go`: Wails application shell, window, tray, and diagnostics entry point.
+- `service.go`: main Sandfox service, state, profile, policy, DNS, rule, and configuration-generation logic.
+- `platform.go`: platform integration and privileged service management.
+- `cmd/roverservice`: RoverService-compatible privileged helper.
+- `frontend/`: React UI and generated Wails bindings.
+- `resources/presets/`: bundled templates and `sing-box` preset rule sets.
+- `scripts/`: parity, completion, target-host, Docker, and packaging validators.
+- `docs/`: parity audit and target-host validation runbook.
 
-```sh
-docs/rover-parity-audit.md
-```
+## Data and privacy
 
-Current strict completion audit result: `25/29`.
+Sandfox stores profile content, settings, rules, logs, and backups locally in the user data directory. Subscription URLs and API secrets are stored locally by the application; do not paste them into bug reports. Logs are local unless you choose to share them.
 
-Implementation and automated checks cover API parity, supported node/rule conversion parity, profile/subscription handling, sing-box config generation, Rover preset rule set/template parity, RoverService endpoint parity, frontend platform areas, shadcn-style lucide icons, platform integration controls, macOS/Windows packaging, and helper socket runtime checks.
+The project has no telemetry, account service, or hosted backend.
 
-Known environment-bound gaps:
+## Compatibility notes
 
-- Real macOS LaunchDaemon install/start/stop requires administrator authorization.
-- Real Windows Service install/start/stop requires a Windows host and UAC.
-- Real Linux systemd install/start/stop requires a Linux host with sudo or pkexec.
-- Full Linux AppImage/DEB/RPM/Arch packaging requires a working Docker/Linux environment.
+- macOS is the primary development and desktop test platform.
+- Windows NSIS packaging is implemented, but signing and service-lifecycle evidence require a Windows host.
+- Linux packages are implemented for GTK4 and WebKitGTK 6. Full AppImage, DEB, RPM, and Arch validation requires a Linux or Docker environment.
+- The helper is compatible with RoverService endpoints and uses platform-specific launch daemons, Windows services, or systemd units.
 
-Do not mark Rover parity complete until `wails3 task audit:rover` passes with these target-host evidence files:
+## Contributing
 
-- `macos-service.json`
-- `windows-service.json`
-- `linux-service.json`
-- `linux-package.json`
+Read [CONTRIBUTING.md](CONTRIBUTING.md) before opening an issue or pull request. Bug reports with platform, version, reproduction, logs, and expected versus actual behavior are especially useful.
 
-## Key paths
+## Security
 
-- `service.go`: main Wails service, config generation, profile/rule/DNS logic
-- `platform.go`: platform integration and privileged service management
-- `cmd/roverservice`: RoverService-compatible helper
-- `frontend/src/App.tsx`: React UI
-- `scripts/rover-parity-check.mjs`: Rover parity verifier
-- `scripts/docker-ready.mjs`: bounded Docker readiness check
+Report security issues through private vulnerability reporting. Do not open a public issue for privilege escalation, command execution, secrets exposure, or other exploitable behavior. See [SECURITY.md](SECURITY.md).
+
+## License
+
+Sandfox is available under the [MIT License](LICENSE). Third-party dependencies remain under their own licenses.
