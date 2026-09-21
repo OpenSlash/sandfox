@@ -1,5 +1,5 @@
 blank_issues_enabled: true
 contact_links:
   - name: Security vulnerability
-    url: https://github.com/HoltAI/sandfox/security/advisories/new
+    url: https://github.com/OpenSlash/sandfox/security/advisories/new
     about: Report security issues privately; do not create a public issue.

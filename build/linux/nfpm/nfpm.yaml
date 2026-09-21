@@ -12,7 +12,7 @@ priority: "extra"
 maintainer: "JairoGuo <JairoGuo@users.noreply.github.com>"
 description: "A local-first desktop client for managing sing-box"
 vendor: "HoltAI"
-homepage: "https://github.com/HoltAI/sandfox"
+homepage: "https://github.com/OpenSlash/sandfox"
 license: "MIT"
 release: "1"
 

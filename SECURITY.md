@@ -6,7 +6,7 @@ Sandfox is preparing its first public release. Fixes target `main`, and security
 
 ## Reporting a vulnerability
 
-Use [GitHub private vulnerability reporting](https://github.com/HoltAI/sandfox/security/advisories/new) for vulnerabilities. Do not disclose exploit details in public issues, pull requests, or discussions.
+Use [GitHub private vulnerability reporting](https://github.com/OpenSlash/sandfox/security/advisories/new) for vulnerabilities. Do not disclose exploit details in public issues, pull requests, or discussions.
 
 Please include:
 

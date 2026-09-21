@@ -3,7 +3,7 @@
 ## Ownership
 
 - Project lead: JairoGuo
-- Repository: [HoltAI/sandfox](https://github.com/HoltAI/sandfox)
+- Repository: [OpenSlash/sandfox](https://github.com/OpenSlash/sandfox)
 - Security reports: use private vulnerability reporting according to [SECURITY.md](SECURITY.md)
 
 New maintainers should be active contributors for at least one release cycle, demonstrate understanding of platform-specific risks, and be added by the project lead.
