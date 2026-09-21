@@ -103,6 +103,16 @@ func TestParsePIDHelpers(t *testing.T) {
 	}
 }
 
+func jsonBody(t *testing.T, value any) []byte {
+	t.Helper()
+
+	payload, err := json.Marshal(value)
+	if err != nil {
+		t.Fatal(err)
+	}
+	return payload
+}
+
 func TestFileHelperEndpoints(t *testing.T) {
 	server := createHTTPServer()
 	path := filepath.Join(t.TempDir(), "sample.txt")
@@ -110,7 +120,7 @@ func TestFileHelperEndpoints(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	req := httptest.NewRequest(http.MethodPost, "/check-path", bytes.NewReader([]byte(`{"path":"`+path+`"}`)))
+	req := httptest.NewRequest(http.MethodPost, "/check-path", bytes.NewReader(jsonBody(t, map[string]any{"path": path})))
 	rec := httptest.NewRecorder()
 	server.Handler.ServeHTTP(rec, req)
 	if rec.Code != http.StatusOK {
@@ -125,7 +135,7 @@ func TestFileHelperEndpoints(t *testing.T) {
 		t.Fatalf("unexpected check-path response: %#v", body.Data)
 	}
 
-	req = httptest.NewRequest(http.MethodPost, "/read-file", bytes.NewReader([]byte(`{"path":"`+path+`","maxBytes":5}`)))
+	req = httptest.NewRequest(http.MethodPost, "/read-file", bytes.NewReader(jsonBody(t, map[string]any{"path": path, "maxBytes": 5})))
 	rec = httptest.NewRecorder()
 	server.Handler.ServeHTTP(rec, req)
 	if rec.Code != http.StatusOK {
@@ -178,7 +188,7 @@ func TestDNSLifecycleEndpoints(t *testing.T) {
 	server := createHTTPServer()
 	defer stopDNSServer()
 
-	startBody := []byte(`{"address":"127.0.0.1:0","certDir":"` + t.TempDir() + `"}`)
+	startBody := jsonBody(t, map[string]any{"address": "127.0.0.1:0", "certDir": t.TempDir()})
 	req := httptest.NewRequest(http.MethodPost, "/dns/start", bytes.NewReader(startBody))
 	rec := httptest.NewRecorder()
 	server.Handler.ServeHTTP(rec, req)
