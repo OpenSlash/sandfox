@@ -27,7 +27,6 @@ jobs:
           cache-dependency-path: frontend/package-lock.json
       - name: Install Wails CLI
         run: go install github.com/wailsapp/wails/v3/cmd/wails3@latest
-      - name: Run Go tests
       - name: Build macOS app
         run: |
           export PATH="$HOME/go/bin:$PATH"
