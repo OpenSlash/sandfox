@@ -28,7 +28,9 @@ jobs:
       - name: Install Wails CLI
         run: go install github.com/wailsapp/wails/v3/cmd/wails3@latest
       - name: Run Go tests
-        run: go test ./...
+        run: |
+          npm --prefix frontend ci
+          go test ./...
       - name: Build macOS app
         run: |
           export PATH="$HOME/go/bin:$PATH"
@@ -60,7 +62,9 @@ jobs:
       - name: Install Wails CLI
         run: go install github.com/wailsapp/wails/v3/cmd/wails3@latest
       - name: Run Go tests
-        run: go test ./...
+        run: |
+          npm --prefix frontend ci
+          go test ./...
       - name: Build Windows installer
         run: |
           $env:Path = "$env:USERPROFILE\go\bin;$env:Path"
@@ -92,8 +96,6 @@ jobs:
           node-version: 22
           cache: npm
           cache-dependency-path: frontend/package-lock.json
-      - name: Install Wails CLI
-        run: go install github.com/wailsapp/wails/v3/cmd/wails3@latest
       - name: Install Linux build dependencies
         run: |
           sudo apt-get update
@@ -101,6 +103,8 @@ jobs:
             build-essential pkg-config \
             libgtk-4-dev libwebkitgtk-6.0-dev \
             libayatana-appindicator3-dev
+      - name: Install Wails CLI
+        run: go install github.com/wailsapp/wails/v3/cmd/wails3@latest
       - name: Build Linux packages
         run: |
           export PATH="$HOME/go/bin:$PATH"
